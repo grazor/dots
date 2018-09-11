@@ -1,0 +1,7 @@
+#!/bin/sh
+if ! urxvtc "$@" ; then
+ echo "failed to start ($?), trying to start daemon"
+ urxvtd --quiet --opendisplay --fork &
+ sleep 1
+ exec urxvtc "$@"
+fi

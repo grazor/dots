@@ -1,0 +1,37 @@
+#!/bin/bash
+
+CITY="Moscow"
+
+DETAILED_INFO_WIDTH=124
+SHORT_INFO_WIDTH=26
+TERMINAL_WIDTH=$(tput cols)
+
+MAX_REQUEST_TIME=0.5
+
+whitespaces() {
+	local amount
+	local spaces
+
+	amount=$[ ($1 - $2)/2 ]
+	printf "%${amount}s" ""
+}
+
+
+WTTR=$(curl -m ${MAX_REQUEST_TIME} -s wttr.in/$CITY)
+
+if [ $? -eq 0 ]
+then
+	if [ $TERMINAL_WIDTH -ge $DETAILED_INFO_WIDTH ]
+	then
+		wsp=$(whitespaces $TERMINAL_WIDTH $DETAILED_INFO_WIDTH)
+		echo "$WTTR" | head -n 17 | tail -n 10 | sed "s/^/${wsp}/"
+		echo
+	elif [ $TERMINAL_WIDTH -ge $SHORT_INFO_WIDTH ]
+	then
+		wsp=$(whitespaces $TERMINAL_WIDTH $SHORT_INFO_WIDTH)
+		echo
+		echo "$WTTR" | head -n 7 | tail -n 5 | sed "s/^/${wsp}/"
+		echo
+	fi
+fi
+

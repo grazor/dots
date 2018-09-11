@@ -1,0 +1,34 @@
+#!/bin/bash
+
+DIR=$(dirname "$(dirname "$(readlink -f "$0")")")
+IMAGE=$DIR/res/logo.png
+
+LAYOUTS=$( setxkbmap -query | awk '{ if ($1 == "layout:") {print $2 }}' )
+MPD_STATUS=$( mpc status | grep -Po "\[.+\]" | grep -Po "[^\[\]]+" )
+
+
+revert() {
+	setxkbmap -layout $LAYOUTS; 
+	[[ "$MPD_STATUS" == "playing" ]] &&  mpc play
+	exit
+}
+
+trap revert  SIGINT SIGQUIT SIGKILL
+
+ps ax | grep -q "[i]3lock" && exit 0
+
+scrot /tmp/screen.png
+convert /tmp/screen.png -scale 20% -scale 500% /tmp/screen.png
+
+[[ $# -ge 1 ]] && IMAGE="$1"
+[[ -f "$IMAGE" ]] && convert /tmp/screen.png "$IMAGE" -gravity center -composite -matte /tmp/screen.png
+
+mpc pause
+setxkbmap -layout us
+
+i3lock -n -f -e -i /tmp/screen.png
+
+sleep 1
+revert
+rm /tmp/screen.png
+
