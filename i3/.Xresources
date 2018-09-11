@@ -59,8 +59,8 @@ URxvt.keysym.C-Up:       perl:font-size:increase
 URxvt.keysym.C-Down:     perl:font-size:decrease
 URxvt.keysym.C-S-Up:     perl:font-size:incglobal
 URxvt.keysym.C-S-Down:   perl:font-size:decglobal
-URxvt*keysym.C-Left:     \033[1;5D
-URxvt*keysym.C-right:    \033[1;5C
+URxvt.keysym.C-Left:     \033[1;5D
+URxvt.keysym.C-Right:    \033[1;5C
 !Home and End keys to jump to the beginning and end of lines
 URxvt*keysym.Home:       \033[1~
 URxvt*keysym.End:        \033[4~
@@ -78,15 +78,17 @@ URxvt.tabbed.title:      true
 
 !! Copy/Paste and URl handling
 ! url-select (part of urxvt-perls package)
-URxvt.perl-ext-common:         default,selection-to-clipboard,pasta,matcher,keyboard-select,vtwheel
+URxvt.perl-ext-common:         default,clipboard,matcher,keyboard-select,vtwheel
+
 URxvt.keysym.M-u:              perl:url-select:select_next
 URxvt.underlineURLs:           True 
-URxvt.keysym.M-Escape:         perl:keyboard-select:activate
-URxvt.keysym.Control-Shift-V:  perl:pasta:paste
-URxvt.url-select.autocopy:     true
 URxvt.url-select.underline:    true
 URxvt.url-launcher:            /usr/bin/google-chrome-beta
 URxvt.matcher.button:          1
+
+URxvt.keysym.M-Escape:         perl:keyboard-select:activate
+URxvt.keysym.Control-Shift-C:  perl:clipboard:copy
+URxvt.keysym.Control-Shift-V:  perl:clipboard:paste
 
 !! Disable the stupid ctrl+shift 'feature'
 URxvt.iso14755:            false

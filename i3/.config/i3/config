@@ -6,6 +6,7 @@
 #*************** Keybindings ******************
 
 set $mod Mod4
+floating_modifier $mod
 
 # Start a terminal
 bindsym $mod+Return exec --no-startup-id urxvtc
@@ -153,7 +154,7 @@ bindsym $mod+minus scratchpad show
 #  i3-gaps settings
 
 #smart_gaps on
-#smart_borders on
+smart_borders on
 
 # Global gaps size
 gaps inner 5
@@ -249,13 +250,16 @@ set_from_resource $cyan        color14 #000000
 set_from_resource $white       color7  #000000
 set_from_resource $darkwhite   color15 #000000
 
-set $background  #e0eaf9
+set 		  $background  #e0eaf9
 
-# Window colors           border       background   text            indicator    child_border
-client.focused            $darkmagenta $darkmagenta $darkwhite      $darkblack  $darkblack
-client.focused_inactive   $darkblack   $darkblack   $white          $darkblack  $darkblack
-client.unfocused          $darkblack   $darkblack   $white          $darkblack  $darkblack
-client.urgent 		  $darkblue    $white       $darkblack      $darkblack  $darkblack
+# Window colors           border        background    text        indicator
+client.focused            $darkmagenta  $darkmagenta  $darkwhite  $darkmagenta
+client.focused_inactive   $darkblack    $darkblack    $white      $darkmagenta
+client.unfocused          $darkblack    $darkblack    $white      $darkblack
+client.urgent 		  $darkblue     $white        $darkblack  $darkblack
+
+# Set per-application border
+for_window [class="^.*"] border pixel 1
 
 # Fancy title bar
 font pango:Hack-regular 8
@@ -278,9 +282,6 @@ bar {
 # your using DM.
 
 #*************  Other settings  *********************
-
-# Set per-application border
-for_window [class="^.*"] border pixel 1
 
 # Enable or disable floating
 for_window [class="Lxappearance"] floating enable

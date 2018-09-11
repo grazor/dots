@@ -198,14 +198,6 @@ ramp-1 = 
 ramp-2 = 
 ramp-foreground = ${colors.red}
 
-[module/menu]
-type = custom/text
-
-content = ""
-content-foreground = ${colors.red}
-;content-background = ${colors.red}
-click-left = ~/.config/popups/todo/todo
-
 [module/mail]
 type = custom/script
 interval = 1200
