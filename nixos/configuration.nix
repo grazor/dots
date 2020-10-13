@@ -1,7 +1,9 @@
 { config, pkgs, ... }:
 
 {
-  imports = [ ./hardware-configuration.nix ];
+  imports =
+    [ ./hardware-configuration.nix ./nvidia.nix ./postgresql.nix ./vim.nix ./steam.nix ./steamcontroller.nix ];
+    #./assistant.nix 
 
   time.timeZone = "Europe/Moscow";
 
@@ -13,39 +15,22 @@
     };
 
     kernel.sysctl = { "fs.inotify.max_user_watches" = 100000; };
-
-    extraModprobeConfig = ''
-      options iwlwifi fw_monifor=1
-    '';
-
+    kernelPackages = pkgs.linuxPackages_latest;
     cleanTmpDir = true;
   };
 
   powerManagement.enable = true;
 
-  # systemd.services.systemd-udev-settle.enable = false;
   systemd.services.NetworkManager-wait-online.enable = false;
+  systemd.extraConfig = ''
+    DefaultTimeoutStopSec=10s
+  '';
 
-  # hardware.enableAllFirmware = true;
-  hardware.bluetooth.enable = true;
-  hardware.opengl.driSupport32Bit = true;
+  console.font = "latarcyrheb-sun32";
+
   hardware.pulseaudio = {
     enable = true;
     support32Bit = true;
-    extraConfig = ''
-      # Automatically switch to newly connected devices.
-      # load-module module-switch-on-connect
-
-      # Discover Apple iTunes devices on network.
-      load-module module-raop-discover
-    '';
-    zeroconf.discovery.enable = true;
-
-    # Enable extra bluetooth modules, like APT-X codec.
-    extraModules = [ pkgs.pulseaudio-modules-bt ];
-
-    # Enable bluetooth (among others) in Pulseaudio
-    package = pkgs.pulseaudioFull;
   };
   # Make sure pulseaudio is being used as sound system
   # for the different applications as well.
@@ -58,8 +43,7 @@
       enable = false;
       allowedTCPPorts = [
         3000 # Development
-        8010 # VLC Chromecast streaming
-        8080 # Development
+        8000 # Development
       ];
       allowPing = true;
     };
@@ -71,6 +55,7 @@
     acpi
     bash
     binutils
+    file
     bridge-utils
     efibootmgr
     findutils
@@ -81,15 +66,20 @@
     ntfs3g
     openvpn
     unzip
-    neovim
     wget
     wirelesstools
     git
     jq
+    xdg_utils
+    mpv
 
+    go
+    gotools
+    delve
+    python
     docker
+    gnumake
 
-    avahi
     networkmanager_openvpn
     usbutils
 
@@ -102,7 +92,9 @@
     nixfmt
     gimp
     tdesktop
-    zoom
+    zoom-us
+
+    v4l-utils
 
     rofi
     mako
@@ -113,6 +105,7 @@
     slurp
     waybar
     wl-clipboard
+    wineWowPackages.stable
     libnotify
     pavucontrol
     xdg-user-dirs
@@ -120,43 +113,49 @@
 
   services.acpid.enable = true;
   services.logind.lidSwitch = "suspend";
+  services.sshd.enable = true;
+  programs.ssh.askPassword = "";
 
   services.udev.extraRules = ''
     SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="0925", ATTR{idProduct}=="3881", MODE="0666"
     SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="21a9", ATTR{idProduct}=="1001", MODE="0666"
     SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="2341", ATTR{idProduct}=="0043", MODE="0666", SYMLINK+="arduino"
-    SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", MODE="0664", GROUP="uucp"
     SUBSYSTEM=="tty", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="0043", MODE="0660", SYMLINK+="ttyArduinoUno"
     SUBSYSTEM=="tty", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", MODE="0660", SYMLINK+="ttyArduinoNano2"
     SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", MODE="0660", SYMLINK+="ttyArduinoNano"
+
+    ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="0451", ATTRS{idProduct}=="16a0", MODE="0666"
+    ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="11a0", ATTRS{idProduct}=="db20", MODE="0666"
+    ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="11a0", ATTRS{idProduct}=="eb20", MODE="0666"
+    ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="0451", ATTRS{idProduct}=="16a2", MODE="0666"
+    
+    SUBSYSTEM=="video4linux", KERNEL=="video[0-9]*", ATTRS{product}=="C922 Pro Stream Webcam", RUN="v4l2-ctl -d $devnode --set-ctrl=zoom_absolute=120 --set-ctrl=backlight_compensation=1"
   '';
 
-  services.locate.enable = true;
-  services.postgresql.enable = true;
-
-  services.printing = {
-    enable = true;
-    drivers = [ pkgs.gutenprint pkgs.splix pkgs.cupsBjnp ];
-  };
-
-  services.avahi = {
-    enable = true;
-    browseDomains = [ ];
-    publish.enable = false;
-  };
-
-  services.redshift = { enable = true; };
   location.provider = "geoclue2";
 
-  services.xserver.displayManager.gdm = {
-    enable = true;
-    wayland = true;
-  };
   programs.sway.enable = true;
+  services.xserver = {
+    enable = true;
 
-  programs.zsh.enable = true;
+    windowManager.i3 = {
+      enable = true;
+      extraPackages = with pkgs; [ i3lock ];
+    };
+  };
+
   programs.bash.enableCompletion = true;
   programs.adb.enable = true;
+
+  programs.zsh.enable = true;
+  programs.zsh.syntaxHighlighting.enable = true;
+  programs.zsh.ohMyZsh = {
+    enable = true;
+    plugins = [ "git" "sudo" "docker" "pip" ];
+    theme = "agnoster";
+  };
+  programs.zsh.shellAliases = {
+  };
 
   virtualisation.docker.enable = true;
 
@@ -178,6 +177,8 @@
     ];
     useDefaultShell = true;
   };
+
+  services.redis.enable = true;
 
   nix.trustedUsers = [ "root" "@wheel" ];
   nix.extraOptions = ''
